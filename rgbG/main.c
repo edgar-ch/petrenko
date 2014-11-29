@@ -7,6 +7,7 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
+#include <math.h>
 
 struct bmp_f_header {
 	uint16_t bfType;
@@ -30,16 +31,41 @@ struct bmp_header_v3 {
 	uint32_t biClrImportant;
 } __attribute__ ((__packed__));
 
-int main()
+int main(int argc, char **argv)
 {
+	char c;
 	int i, fd_inp, fd_out, rbytes;
+	unsigned int r = 0x0, g = 0x0, b = 0x0;
+	int G = 0, gray, r_p, g_p, b_p;
 	ssize_t rd;
 	struct bmp_header_v3 header;
 	struct bmp_f_header f_header;
 	uint8_t *buf;
 
+	while ((c = getopt(argc, argv, "rgbG")) != -1) {
+		switch (c) {
+			case 'r':
+				r = 0xFF;
+				break;
+			case 'g':
+				g = 0xFF;
+				break;
+			case 'b':
+				b = 0xFF;
+				break;
+			case 'G':
+				G = 1;
+				break;
+			case '?':
+				printf("Unknown option `-%c'.\n", optopt);
+				break;
+			default:
+				exit(EXIT_FAILURE);
+		}
+	}
+
 	fd_inp = open("25.BMP", O_RDONLY);
-	fd_out = open("res.bmp", O_WRONLY|O_TRUNC|O_CREAT, 0666);
+	fd_out = open("res.bmp", O_WRONLY | O_TRUNC | O_CREAT, 0666);
 
 	read(fd_inp, &f_header, sizeof(struct bmp_f_header));
 	//lseek(fd_inp, 0xA, SEEK_SET);
@@ -72,9 +98,16 @@ int main()
 		if (rd == 0)
 			break;
 		for (i = 0; i < rbytes; i += 3) {
-			buf[i] &= 0;
-			buf[i + 1] &= 0;
-			buf[i + 2] &= 0xFF;
+			buf[i] &= b;
+			buf[i + 1] &= g;
+			buf[i + 2] &= r;
+			if (G) {
+				b_p = buf[i]; g_p = buf[i + 1]; r_p = buf[i + 2];
+				gray = sqrt(r_p*r_p + g_p*g_p + b_p*b_p) / sqrt(3);
+				buf[i] = gray;
+				buf[i + 1] = gray;
+				buf[i + 2] = gray;
+			}
 		}
 		write(fd_out, buf, rbytes);
 	}
