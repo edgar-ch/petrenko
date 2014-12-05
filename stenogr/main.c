@@ -2,7 +2,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdint.h>
-#include <pthread.h>
 #include <errno.h>
 #include <sys/types.h>
 #include <sys/stat.h>
