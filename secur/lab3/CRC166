@@ -1,0 +1,8 @@
+Name : CRC 16/6
+Width : 16
+Poly : 15AB
+Init : 0000
+RefIn : False
+RefOut : False
+XorOut : False
+Check : 233C
